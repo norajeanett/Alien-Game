@@ -1,0 +1,19 @@
+body {
+	background-image: url('verdensrom.jpg');
+	width: 100vw;
+	height: 100vh;
+	margin:0;
+	border:0;
+	padding:0;
+	display:flex;
+	flex-direction: row;
+	justify-content: center;
+	text-align: center;
+	align-items: flex-start;
+}
+canvas {
+    background-image: url('verdensrom.jpg');
+   	border-style: solid;
+	border-color:white;
+	border:1;
+}

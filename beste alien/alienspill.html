@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel= "stylesheet" type="text/css" href="game.css">
+</head>
+<body onload="startGame()">
+
+<script>
+
+
+const canvasWidth = 900;
+const canvasHeight = 800;
+const scoreBoardWidth = 300;
+const scoreBoardHeight = 200;
+const updateInterval = 17;
+const maxSpeed = 3;
+const numOfAliens = 10;
+const kuleSpeed = 10;
+var lives = 3;
+var pause = false;
+var numAliens = 30;
+
+
+
+function startGame() {
+    player = new gamePlayer();
+    romskip = new romskip();
+    Aliens = new aliens(numOfAliens);
+    myGameArea.start();
+    kuler = new kuler();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    scoreBoard : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = canvasWidth;
+        this.canvas.height = canvasHeight;
+        this.scoreBoard.width = scoreBoardWidth;
+        this.scoreBoard.height = scoreBoardHeight;
+        this.context = this.canvas.getContext("2d");
+        this.scoreContext = this.scoreBoard.getContext("2d");
+        document.body.insertBefore(this.scoreBoard, document.body.childNodes[0]);
+        document.body.insertBefore(this.canvas, document.body.childNodes[1]);
+        this.interval = setInterval(updateGameArea, updateInterval);
+    },
+    clear : function() {
+        ctx = this.context;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx = this.scoreContext;
+        ctx.clearRect(0, 0, this.scoreBoard.width, this.scoreBoard.height);
+    }
+}
+
+function kule(){
+    this.angle = player.rorAngle+15;
+    this.speed = kuleSpeed;
+    this.x = canvasWidth-50;
+    this.y = canvasHeight-50;
+    kuleImg = document.createElement('img'); 
+    kuleImg.src = 'Slimeball.png';
+
+
+    this.update = function(){
+     ctx = myGameArea.context;
+     ctx.drawImage(kuleImg,this.x,this.y,20,20);
+     
+    }
+    this.move = function(){
+        this.x -= this.speed;
+        this.y -= (this.angle/15)*this.speed;
+        if(this.x < 0 || this.y <0){
+            kuler.kuleList.shift();
+        }
+    }
+    this.detectCrash = function() {
+        for(i=0;i<Aliens.alienList.length;i++){
+            if(Math.abs(this.x-Aliens.alienList[i].x)<30 && Math.abs(this.y-Aliens.alienList[i].y)<30){
+                Aliens.alienList[i].x = Math.random() * (canvasWidth-1) +1;
+                Aliens.alienList[i].y = Math.random() * (250-100) + 100;
+                numAliens -= 1;
+            }
+        }
+    }
+}
+
+function kuler(){
+    this.kuleList = [];
+    this.update = function(){
+        for(i = 0;i<this.kuleList.length;i++){
+            this.kuleList[i].update();
+            this.kuleList[i].move();
+            this.kuleList[i].detectCrash();
+        }
+    }
+}
+
+function gamePlayer(){
+
+   
+    this.fallSpeed = 4;
+    this.speed = 2;
+    
+
+    playerImg = document.createElement('img'); 
+    playerImg.src = 'figur.png';
+    rorImg = document.createElement('img');
+    rorImg.src = 'ror.png';
+    this.rorAngle = 0;
+    this.rorDirection = 0.2;
+    this.playerHeight = 100;
+    this.playerWidth = 80;
+    this.x = canvasWidth/2;
+    this.y = canvasHeight-this.playerHeight;
+    this.update = function(){
+     ctx = myGameArea.context;
+     ctx.drawImage(playerImg,this.x,this.y,this.playerWidth,this.playerHeight);
+     ctx = myGameArea.context;
+     /*ctx.drawImage(rorImg,canvasWidth-100,canvasHeight-100,100,100);*/
+     this.rotate();  
+    }
+    this.move = function() {
+        if(this.x>canvasWidth-this.playerWidth){ this.speed = this.speed * (-1)}
+        if(this.x<0){this.speed = this.speed * (-1)}
+        if(this.y < canvasHeight-this.playerHeight){this.y += this.fallSpeed}
+        this.x += this.speed;
+        if(numAliens < 1){
+                pause = true;
+                window.location.replace('vinn.html');
+            }
+    }
+    this.rotate = function(){
+        ctx = myGameArea.context;
+        // rotate 45º bilde "imgSprite", based on its rotation axis located at x=20,y=30 and draw it on context "ctx" of the canvas on coordinates x=200,y=100
+        var TO_RADIANS = Math.PI/180;
+        if(this.rorAngle < -15){
+            this.rorDirection = 0.2;
+        }
+        if(this.rorAngle > 15){
+            this.rorDirection = -0.2;
+        }
+        this.rorAngle += this.rorDirection;
+        this.rotateAndPaintImage ( ctx, rorImg, this.rorAngle*TO_RADIANS,canvasWidth+20,canvasHeight+20, 100,100);
+    }
+    this.rotateAndPaintImage = function( context, image, angleInRad , positionX, positionY, axisX, axisY ) {
+      context.translate( positionX, positionY );
+      context.rotate( angleInRad );
+      context.drawImage( image, -axisX, -axisY,100,100);
+      context.rotate( -angleInRad );
+      context.translate( -positionX, -positionY );
+    }
+}
+
+alien = function() {
+    
+    this.fallSpeed = 3;
+    
+    alienImg = document.createElement('img'); 
+    alienImg.src = 'aliens.png';
+    this.height = 110;
+    this.width = 80;
+    this.x = Math.random() * (canvasWidth-1) +1;
+    this.y = Math.random() * (250-100) + 100;
+    this.update = function(){
+     ctx = myGameArea.context;
+     ctx.drawImage(alienImg,this.x,this.y,this.width,this.height);   
+    }
+    this.move = function() {
+        if(this.y > canvasHeight){
+            this.y = Math.random() * (250-100) + 100;
+            this.x = Math.random() * (canvasWidth-80-1) +1;
+        } else
+        if(this.y < canvasHeight+10){this.y += this.fallSpeed}
+    }
+    this.detectCrash = function() {
+        if(Math.abs(this.x-player.x)<40 && Math.abs(this.y-player.y)<15){
+            Aliens = new aliens(numOfAliens);
+            lives -= 1;
+            if(lives == 0){
+                window.location.replace('tap.html');
+            }
+        }
+    }
+}
+
+aliens = function(numOfAliens){
+    this.alienList = [];
+    for(i = 0;i<numOfAliens;i++){
+        this.alienList[i] = new alien();
+    }
+    this.update = function(){
+        var a = this.alienList.length;
+        for(i = 0;i<a;i++){
+            this.alienList[i].update();
+            this.alienList[i].move();
+            this.alienList[i].detectCrash();
+            a = this.alienList.length;
+        }
+    }
+}
+
+function romskip(){
+    /*------- Variables --------*/
+    this.speed = 2;
+    this.moveUpDown = true;
+    /*--------------------------*/
+
+    romskipImg = document.createElement('img'); 
+    romskipImg.src = '1.png';
+    this.x = 0;
+    this.y = 0;
+    this.update = function(){
+     ctx = myGameArea.context;
+     ctx.drawImage(romskipImg,this.x,this.y,500,200);   
+    }
+    this.move = function() {
+        if(this.x>canvasWidth-500){ this.speed = this.speed * (-1)}
+        if(this.x< 0){this.speed = this.speed * (-1)}
+        this.x += this.speed;
+        if(this.x%11 == 0 && this.moveUpDown){this.y = Math.floor(Math.random() * 10);}
+    }
+}
+
+function updateLives(){
+    var colors = ["red","white","white"]
+    ctx = myGameArea.scoreContext;
+    ctx.font = "30px Arial";
+    ctx.fillStyle = colors[lives-1];
+    ctx.fillText("Liv igjen: " + lives.toString(),0,30);
+    ctx.fillText("Aliens: " + numAliens,0,80);
+}
+
+function updateGameArea() {
+    if(!pause){
+        myGameArea.clear();
+        kuler.update();
+        player.update();
+        player.move();
+        romskip.update();
+        romskip.move();
+        Aliens.update();
+        updateLives();
+    }
+    
+}
+
+document.onkeydown = function(event) {
+    switch (event.keyCode) {
+       case 37: /* Left */
+       		if (player.speed != -maxSpeed) {
+            	player.speed -= 1;
+        }
+          break;
+       case 39: /* Right */
+           	if (player.speed != maxSpeed) {
+                player.speed += 1;
+            }
+            break;
+        case 38: /* Up */
+            if(player.y == canvasHeight-player.playerHeight){
+                player.y -= player.playerHeight;
+            }
+           	break;
+        case 32: /* Space */
+            kuler.kuleList.push(new kule());
+            break;
+        case 13: /* Enter */
+            pause = !pause;
+            break;
+
+    }
+};
+
+</script>
+</body>
+<html>
